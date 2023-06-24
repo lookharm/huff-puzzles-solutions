@@ -13,5 +13,16 @@
 
 
 #define macro MAIN() = takes(0) returns(0) {
+    // the test case use abi.decode(data, (bytes))
+    0x20 0x00 mstore // offset to start of data
+    0x09 0x20 mstore // number of elements of the bytes code
+    0x4f6e6c7920487566660000000000000000000000000000000000000000000000 // 'Only Huff' is padded with '00'.
+    0x40 mstore
+    0x60 0x00 revert
     
+    // the final return data would be:
+    // 0000000000000000000000000000000000000000000000000000000000000020
+    // 0000000000000000000000000000000000000000000000000000000000000009
+    // 4f6e6c7920487566660000000000000000000000000000000000000000000000
+
 }

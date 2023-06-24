@@ -10,9 +10,53 @@
  *  NOTICE: The contract should revert when an unrecognized function is called
  */
 
- #define function distribute(address[]) payable returns()
+#define function distribute(address[]) payable returns()
 
 
- #define macro MAIN() = takes(0) returns(0) {
-   
- }
+#define macro MAIN() = takes(0) returns(0) {
+    0x00 calldataload
+    0xe0 shr
+    __FUNC_SIG(distribute) eq
+    init jumpi
+
+    0x00 0x00 revert
+
+    init:
+    0x24 calldataload // len
+    0x00 // index
+    0x24 calldataload // len
+    callvalue
+    div // [amount (value/len), index, len]
+
+    // [amount, index, len]
+    dis_loop:
+        dup2 // [index, amount, index, len]
+        0x20
+        mul // [index*0x20, amount, index, len]
+        0x44 // 1st elem
+        add // [index*0x20+0x44, amount, index, len]
+        calldataload // [address, amount, index, len]
+
+        0x00
+        0x00
+        0x00
+        0x00 // [0,0,0,0, address, amount, index, len]
+        swap4 // [address,0,0,0,0, amount, index, len]
+        dup6 // [amount, address,0,0,0,0, amount, index, len]
+        swap1 // [address, amount,0,0,0,0, amount, index, len]
+        0x00 // [0, address, amount,0,0,0,0, amount, index, len]
+        call
+        pop // [amount, index, len]
+
+        swap1 // [index, amount, len]
+        0x01
+        add // [index+1, amount, len]
+        swap1 // [amount, index+1, len]
+
+        dup2 // [index+1, amount, index+1, len]
+        dup4 // [len, index+1, amount, index+1, len]
+        gt dis_loop jumpi
+        // [amount, index+1, len]
+    
+    stop
+}
